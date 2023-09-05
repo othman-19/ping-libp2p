@@ -1,5 +1,6 @@
+use futures::prelude::*;
 use libp2p::{identity, PeerId, ping, Multiaddr, development_transport};
-use libp2p::swarm::{keep_alive, NetworkBehaviour, SwarmBuilder};
+use libp2p::swarm::{keep_alive, NetworkBehaviour, SwarmBuilder, SwarmEvent};
 use std::error::Error;
 
 /// Our network behaviour.
@@ -34,6 +35,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
         swarm.dial(remote)?;
         println!("Dialed {addr}")
     }
-    
-    Ok(())
+
+
+    loop {
+        match swarm.select_next_some().await {
+            SwarmEvent::NewListenAddr { address, .. } => println!("Listening on {address:?}"),
+            SwarmEvent::Behaviour(event) => println!("{event:?}"),
+            _ => {}
+        }
+    }
 }
